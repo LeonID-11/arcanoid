@@ -15,6 +15,10 @@ export default class Platform extends cc.Component {
 
     left: boolean = false;
     right: boolean = false;
+    moving: boolean = false;
+    x: number;
+    maxPos:number;
+    minPos:number;
 
     @property
     Delta: number = 20;
@@ -22,9 +26,37 @@ export default class Platform extends cc.Component {
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
+        this.maxPos = this.node.parent.width/2 - this.node.width/2;
+        this.minPos = - this.node.parent.width/2 + this.node.width/2;
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
+
+        let canvas = this.node.parent;
+        canvas.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
+        canvas.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd, this);
+        canvas.on(cc.Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+        canvas.on(cc.Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
     }
+
+    onTouchStart(e: cc.Touch){
+        this.moving = true;
+        this.x = this.node.x;
+    }
+
+    onTouchEnd(e: cc.Touch){
+        this.moving = false;
+    }
+
+    onTouchCancel(e: cc.Touch){
+        this.moving = false;
+    }
+
+    onTouchMove(e: cc.Touch){
+        if(!this.moving)return;
+
+        this.x += e.getDelta().x;
+    }
+
     onKeyUp(e: KeyboardEvent): any {
         if(e.keyCode == cc.macro.KEY.left){
             this.left = false;
@@ -44,7 +76,7 @@ export default class Platform extends cc.Component {
 
     }
 
-    update (dt) {
+    updateByKeys(){
         let delta = 0;
         if(this.left){
             delta = -this.Delta;
@@ -53,16 +85,35 @@ export default class Platform extends cc.Component {
         }else return;
 
         let pos = this.node.x + delta;
-        let maxPos = this.node.parent.width/2 - this.node.width/2;
-        let minPos = - this.node.parent.width/2 + this.node.width/2;
+        
 
-        if(pos> maxPos){
-            pos = maxPos;
-        }else if(pos< minPos){
-            pos = minPos;
+        if(pos> this.maxPos){
+            pos =this.maxPos;
+        }else if(pos< this.minPos){
+            pos = this.minPos;
         }
 
         this.node.x = pos;
+    }
+
+    updateByTouch(){
+        if(this.x > this.maxPos){
+            this.x = this.maxPos;
+        }else if(this.x < this.minPos){
+            this.x = this.minPos;
+        }
+        this.node.x = this.x;
+    }
+
+    update (dt) {
+        
+        if(this.moving){
+            this.updateByTouch();
+            return;
+        }
+
+        this.updateByKeys();
+        
     }
 
     onDestroy(){
