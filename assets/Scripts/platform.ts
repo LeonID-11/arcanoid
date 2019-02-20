@@ -29,7 +29,7 @@ export default class Platform extends cc.Component {
     @property
     Delta: number = 20;
     
-    ball: Ball;
+   
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
@@ -45,8 +45,6 @@ export default class Platform extends cc.Component {
         canvas.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd,this);
 	    canvas.on(cc.Node.EventType.TOUCH_CANCEL, this.onTouchCancel,this);
         canvas.on(cc.Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
-        
-        this.ball = cc.find("Canvas/ball").getComponent(Ball) as Ball;
     }
     onKeyUp(e: KeyboardEvent): any {
        
@@ -55,13 +53,9 @@ export default class Platform extends cc.Component {
         } 
     }
 
-
-
     onTouchStart(e: cc.Touch){
-       
         this.x = this.node.x;
         this.moving = true;
-       
     }
 
     onTouchEnd(e: cc.Touch){
@@ -76,7 +70,6 @@ export default class Platform extends cc.Component {
         if(!this.moving)return;
      
 	    this.x += e.getDelta().x;
-	    
     }
 
     onKeyDown(e: KeyboardEvent): any {
@@ -108,20 +101,16 @@ export default class Platform extends cc.Component {
             newPos = this.minPos;
         }
         this.node.x = newPos;
-        console.log(newPos);
-        this.ball.onPlatformMoved(newPos);
+        this.node.emit("moved", newPos);
     }
 
     updateByTouch() {
-        //console.log(`touch ${this.x}`);
         this.setPosition(this.x);
     }
 
     updateByKeys(){
         if(this.side==0)return;
-        //console.log('keys');
         this.setPosition(this.node.x + this.Delta * this.side);
-        
     }
 
     onDestroy(){

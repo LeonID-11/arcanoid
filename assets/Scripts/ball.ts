@@ -18,10 +18,26 @@ export default class Ball extends cc.Component {
     isMoving : boolean = false;
     speed: number = 1000;
 
+    @property(cc.Node)
+    platform: cc.Node = null;
+
+    @property(cc.Node)
+    topWall: cc.Node = null;
+
+    @property(cc.Node)
+    leftWall: cc.Node = null;
+
+    @property(cc.Node)
+    rightWall: cc.Node = null;
+
+    @property(cc.Node)
+    bottom: cc.Node = null;
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+        this.platform.on('moved', this.onPlatformMoved, this);
     }
     onKeyDown(e: KeyboardEvent): any {
         if((e.keyCode == cc.macro.KEY.enter || e.keyCode == cc.macro.KEY.space) && !this.isMoving){
@@ -33,12 +49,27 @@ export default class Ball extends cc.Component {
 
     }
 
+    resetBall(){
+        this.isMoving = false;
+        this.node.y = -870;
+        this.vector = new cc.Vec2(1,2);
+        this.node.x = this.platform.x;
+    }
+
     onCollisionEnter(other: cc.Collider , self: cc.Collider) {
-        if(other.node.name=="top_wall" || other.node.name =="platform"){
-            this.vector.y = -this.vector.y;
-        }
-        if(other.node.name == "left_wall" || other.node.name == "right_wall"){
-            this.vector.x = -this.vector.x;
+       
+        switch(other.node){
+            case this.leftWall:
+            case this.rightWall:
+                this.vector.x = -this.vector.x;
+                break;
+            case this.topWall: 
+            case this.platform:
+                this.vector.y = -this.vector.y;
+                break;
+            case this.bottom:
+                this.resetBall();
+                break;
         }
     }
 
@@ -51,7 +82,7 @@ export default class Ball extends cc.Component {
     update (dt) {
         if(this.isMoving){
             this.node.x += this.vector.x * dt * this.speed;
-            this.node.y += this.vector.y * dt*this.speed;
+            this.node.y += this.vector.y * dt * this.speed;
         }
     }
 }
