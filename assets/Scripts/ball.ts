@@ -14,9 +14,9 @@ const {ccclass, property} = cc._decorator;
 export default class Ball extends cc.Component {
   
     
-    vector: cc.Vec2 = new cc.Vec2(0,1);
+    vector: cc.Vec2 = new cc.Vec2(1,2);
     isMoving : boolean = false;
-    speed: number = 2000;
+    speed: number = 1000;
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -31,6 +31,15 @@ export default class Ball extends cc.Component {
 
     start () {
 
+    }
+
+    onCollisionEnter(other: cc.Collider , self: cc.Collider) {
+        if(other.node.name=="top_wall" || other.node.name =="platform"){
+            this.vector.y = -this.vector.y;
+        }
+        if(other.node.name == "left_wall" || other.node.name == "right_wall"){
+            this.vector.x = -this.vector.x;
+        }
     }
 
     onPlatformMoved(pos: number): any {
