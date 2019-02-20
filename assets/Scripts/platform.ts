@@ -1,3 +1,6 @@
+import { PlatformEvent } from "./platform-event";
+import Ball from "./ball";
+
 // Learn TypeScript:
 //  - [Chinese] http://docs.cocos.com/creator/manual/zh/scripting/typescript.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
@@ -10,65 +13,77 @@
 
 const {ccclass, property} = cc._decorator;
 
+
 @ccclass
 export default class Platform extends cc.Component {
 
-    left: boolean = false;
-    right: boolean = false;
+    
+    side: number = 0;
+
     moving: boolean = false;
     x: number;
-    maxPos:number;
-    minPos:number;
+   
+    maxPos: number;
+    minPos: number;
 
     @property
     Delta: number = 20;
     
+    ball: Ball;
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
+
         this.maxPos = this.node.parent.width/2 - this.node.width/2;
         this.minPos = - this.node.parent.width/2 + this.node.width/2;
+
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, this.onKeyUp, this);
 
         let canvas = this.node.parent;
         canvas.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
-        canvas.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd, this);
-        canvas.on(cc.Node.EventType.TOUCH_CANCEL, this.onTouchCancel, this);
+        canvas.on(cc.Node.EventType.TOUCH_END, this.onTouchEnd,this);
+	    canvas.on(cc.Node.EventType.TOUCH_CANCEL, this.onTouchCancel,this);
         canvas.on(cc.Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
+        
+        this.ball = cc.find("Canvas/ball").getComponent(Ball) as Ball;
+    }
+    onKeyUp(e: KeyboardEvent): any {
+       
+        if(e.keyCode == cc.macro.KEY.left || e.keyCode == cc.macro.KEY.right){
+            this.side = 0;
+        } 
     }
 
+
+
     onTouchStart(e: cc.Touch){
-        this.moving = true;
+       
         this.x = this.node.x;
+        this.moving = true;
+       
     }
 
     onTouchEnd(e: cc.Touch){
-        this.moving = false;
+        this.moving=false;
     }
 
     onTouchCancel(e: cc.Touch){
-        this.moving = false;
+        this.moving=false;
     }
 
     onTouchMove(e: cc.Touch){
         if(!this.moving)return;
-
-        this.x += e.getDelta().x;
+     
+	    this.x += e.getDelta().x;
+	    
     }
 
-    onKeyUp(e: KeyboardEvent): any {
-        if(e.keyCode == cc.macro.KEY.left){
-            this.left = false;
-        } else if( e.keyCode == cc.macro.KEY.right){
-            this.right = false;
-        }
-    }
     onKeyDown(e: KeyboardEvent): any {
         if(e.keyCode == cc.macro.KEY.left){
-            this.left = true;
+            this.side = -1;
         } else if( e.keyCode == cc.macro.KEY.right){
-            this.right = true;
+            this.side = 1;
         }
     }
 
@@ -76,43 +91,36 @@ export default class Platform extends cc.Component {
 
     }
 
-    updateByKeys(){
-        let delta = 0;
-        if(this.left){
-            delta = -this.Delta;
-        } else if(this.right){
-            delta = this.Delta;
-        }else return;
-
-        let pos = this.node.x + delta;
-        
-
-        if(pos> this.maxPos){
-            pos =this.maxPos;
-        }else if(pos< this.minPos){
-            pos = this.minPos;
-        }
-
-        this.node.x = pos;
-    }
-
-    updateByTouch(){
-        if(this.x > this.maxPos){
-            this.x = this.maxPos;
-        }else if(this.x < this.minPos){
-            this.x = this.minPos;
-        }
-        this.node.x = this.x;
-    }
-
     update (dt) {
-        
         if(this.moving){
             this.updateByTouch();
             return;
         }
-
         this.updateByKeys();
+    }
+
+    setPosition(pos: number){
+        let newPos = pos;
+        if(newPos> this.maxPos){
+            newPos = this.maxPos;
+        }
+        else if(newPos < this.minPos){
+            newPos = this.minPos;
+        }
+        this.node.x = newPos;
+        console.log(newPos);
+        this.ball.onPlatformMoved(newPos);
+    }
+
+    updateByTouch() {
+        //console.log(`touch ${this.x}`);
+        this.setPosition(this.x);
+    }
+
+    updateByKeys(){
+        if(this.side==0)return;
+        //console.log('keys');
+        this.setPosition(this.node.x + this.Delta * this.side);
         
     }
 
