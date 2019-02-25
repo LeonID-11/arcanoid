@@ -18,6 +18,9 @@ export default class Ball extends cc.Component {
     isMoving : boolean = false;
     speed: number = 1000;
 
+    isTapped: boolean = false;
+    tapTime: number;
+
     @property(cc.Node)
     platform: cc.Node = null;
 
@@ -37,7 +40,30 @@ export default class Ball extends cc.Component {
 
     onLoad () {
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+        this.node.parent.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
         this.platform.on('moved', this.onPlatformMoved, this);
+    }
+
+
+    onTouchStart(e: cc.Event.EventTouch): any {
+       if(this.isMoving || e.getTouches().length !=1)return;
+       
+       let time = new Date().getTime();
+       if(!this.isTapped){
+           this.isTapped = true;
+           this.tapTime = time;
+       } else {
+           let timeDelta = time - this.tapTime;
+           if(timeDelta < 400){
+               //double tap
+               this.isTapped = false;
+               this.isMoving= true;
+           }
+           else {
+               this.tapTime = time;
+           }
+       }
+       
     }
     onKeyDown(e: KeyboardEvent): any {
         if((e.keyCode == cc.macro.KEY.enter || e.keyCode == cc.macro.KEY.space) && !this.isMoving){
