@@ -17,7 +17,11 @@ export default class Game extends cc.Component {
 
     onLoad () {
         var manager = cc.director.getCollisionManager();
+
         manager.enabled = true;
+
+        let physicsManager = cc.director.getPhysicsManager();
+        physicsManager.enabled = true;
     }
 
     start () {

@@ -36,12 +36,15 @@ export default class Ball extends cc.Component {
     @property(cc.Node)
     bottom: cc.Node = null;
 
+    body: cc.RigidBody;
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
         cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
         this.node.parent.on(cc.Node.EventType.TOUCH_START, this.onTouchStart, this);
         this.platform.on('moved', this.onPlatformMoved, this);
+        this.body = this.node.getComponent(cc.RigidBody);
     }
 
 
@@ -57,7 +60,7 @@ export default class Ball extends cc.Component {
            if(timeDelta < 400){
                //double tap
                this.isTapped = false;
-               this.isMoving= true;
+               this.runBall();
            }
            else {
                this.tapTime = time;
@@ -65,9 +68,17 @@ export default class Ball extends cc.Component {
        }
        
     }
+
+    runBall(){
+        this.isMoving = true;
+        this.body.gravityScale=0;
+        this.body.linearVelocity=cc.v2(500,1000);
+        
+    }
+
     onKeyDown(e: KeyboardEvent): any {
         if((e.keyCode == cc.macro.KEY.enter || e.keyCode == cc.macro.KEY.space) && !this.isMoving){
-            this.isMoving = true;
+            this.runBall();
         }
     }
 
@@ -76,28 +87,23 @@ export default class Ball extends cc.Component {
     }
 
     resetBall(){
+        this.body.linearVelocity=cc.v2(0,0);
+        this.body.gravityScale=1;
         this.isMoving = false;
-        this.node.y = -870;
-        this.vector = new cc.Vec2(1,2);
-        this.node.x = this.platform.x;
+        
+        let pos = cc.v2(this.platform.x,-870);
+        this.node.runAction(cc.moveTo(0,pos));
+       
+       
     }
 
-    onCollisionEnter(other: cc.Collider , self: cc.Collider) {
-       
-        switch(other.node){
-            case this.leftWall:
-            case this.rightWall:
-                this.vector.x = -this.vector.x;
-                break;
-            case this.topWall: 
-            case this.platform:
-                this.vector.y = -this.vector.y;
-                break;
-            case this.bottom:
-                this.resetBall();
-                break;
+    onBeginContact(contact: cc.PhysicsContact, self: cc.PhysicsCollider, other: cc.PhysicsCollider) {
+        if(other.node == this.bottom){
+            this.resetBall();
         }
-    }
+     }
+
+    
 
     onPlatformMoved(pos: number): any {
         if(!this.isMoving){
@@ -105,10 +111,9 @@ export default class Ball extends cc.Component {
         }
     }
 
-    update (dt) {
-        if(this.isMoving){
-            this.node.x += this.vector.x * dt * this.speed;
-            this.node.y += this.vector.y * dt * this.speed;
+    update(){
+        if(!this.isMoving){
+            this.node.y = -870;
         }
     }
 }
