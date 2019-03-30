@@ -14,7 +14,7 @@ const {ccclass, property} = cc._decorator;
 export default class Ball extends cc.Component {
   
     
-    vector: cc.Vec2 = new cc.Vec2(1,2);
+    
     isMoving : boolean = false;
     speed: number = 1000;
 
@@ -24,17 +24,7 @@ export default class Ball extends cc.Component {
     @property(cc.Node)
     platform: cc.Node = null;
 
-    @property(cc.Node)
-    topWall: cc.Node = null;
-
-    @property(cc.Node)
-    leftWall: cc.Node = null;
-
-    @property(cc.Node)
-    rightWall: cc.Node = null;
-
-    @property(cc.Node)
-    bottom: cc.Node = null;
+    
 
     body: cc.RigidBody;
 
@@ -71,7 +61,6 @@ export default class Ball extends cc.Component {
 
     runBall(){
         this.isMoving = true;
-        this.body.gravityScale=0;
         this.body.linearVelocity=cc.v2(500,1000);
         
     }
@@ -86,24 +75,19 @@ export default class Ball extends cc.Component {
 
     }
 
+    
+
     resetBall(){
-        this.body.linearVelocity=cc.v2(0,0);
-        this.body.gravityScale=1;
+        this.body.linearVelocity = cc.v2(0,0)
         this.isMoving = false;
-        
-        let pos = cc.v2(this.platform.x,-870);
-        this.node.runAction(cc.moveTo(0,pos));
-       
-       
+        this.node.runAction(cc.moveTo(0, this.platform.x, -870));
     }
 
     onBeginContact(contact: cc.PhysicsContact, self: cc.PhysicsCollider, other: cc.PhysicsCollider) {
-        if(other.node == this.bottom){
+        if(other.node.name=="bottom"){
             this.resetBall();
         }
      }
-
-    
 
     onPlatformMoved(pos: number): any {
         if(!this.isMoving){
